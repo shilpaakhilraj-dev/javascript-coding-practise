@@ -402,3 +402,195 @@ console.log(typeof []); // Logs: object because arrays are objects in JavaScript
 console.log(typeof {}); // Logs: object because {} is an object
 console.log(typeof function() {}); // Logs: function because functions are a special type of object in JavaScript
 console.log(typeof null === "object"); // Logs: true because of the historical bug in JavaScript
+
+// 29. Advanced Event Loop Question
+
+
+console.log("1");
+
+setTimeout(() => {
+    console.log("2");
+}, 0);
+
+Promise.resolve().then(() => {
+    console.log("3");
+
+    Promise.resolve().then(() => {
+        console.log("4");
+    });
+});
+
+setTimeout(() => {
+    console.log("5");
+}, 0);
+
+console.log("6");
+
+// Logs: 1, 6, 3, 4, 2, 5
+
+// 30. One of the hardest common questions
+
+console.log("A");
+
+setTimeout(() => {
+    console.log("B");
+}, 0);
+
+Promise.resolve().then(() => {
+    console.log("C");
+
+    setTimeout(() => {
+        console.log("D");
+    }, 0);
+
+    Promise.resolve().then(() => {
+        console.log("E");
+    });
+});
+
+setTimeout(() => {
+    console.log("F");
+}, 0);
+
+console.log("G");
+
+// Logs: A, G, C, E, B, F, D
+
+// 31. Promise.all
+
+Promise.all([
+    Promise.resolve(1),
+    Promise.resolve(2),
+    Promise.resolve(3)
+]).then(values => {
+    console.log(values);
+});
+
+// Logs: [1, 2, 3]
+
+// why?: The order is based on input order, not completion order.
+
+// 32. finally
+
+Promise.resolve("Success")
+    .then(value => {
+        console.log(value);
+        return "Next";
+    })
+    .finally(() => {
+        console.log("Finally");
+    })
+    .then(value => {
+        console.log(value);
+    });
+
+// Logs: Success, Finally, Next
+
+// why? finally runs after the previous then, but before the next then. It does not affect the value passed to the next then.
+// finally() doesn't normally change the fulfilled value
+
+// 33. Promise returning Promise
+
+Promise.resolve(1)
+    .then(value => {
+        return Promise.resolve(value + 1);
+    })
+    .then(value => {
+        console.log(value);
+    });
+
+// Logs: 2
+// The promise chain waits for the returned Promise
+
+// 34. Promise chaining
+
+Promise.resolve(1)
+    .then(value => {
+        console.log(value);
+        return value + 1;
+    })
+    .then(value => {
+        console.log(value);
+    });
+
+// Logs: 1, 2
+
+// 35. Promise executor
+
+console.log("A");
+
+new Promise((resolve) => {
+    console.log("B");
+    resolve();
+}).then(() => {
+    console.log("C");
+});
+
+console.log("D");
+
+// Logs: A, B, D, C
+// why? The Promise executor runs synchronously, but .then() runs as a microtask.
+
+// 36. Promise error handling
+
+Promise.resolve()
+    .then(() => {
+        throw new Error("Error in then");
+    })
+    .catch(error => {
+        console.log(error.message);
+    });
+
+// Logs: Error in then
+// why? The catch() method handles errors thrown in the previous then() in the promise chain.
+
+// 37. Nested scope
+
+let x = 1;
+
+function outer() {
+    let x = 2;
+
+    function inner() {
+        let x = 3;
+
+        console.log(x);
+    }
+
+    inner();
+}
+
+outer();
+
+// Logs: 3
+// why? JavaScript searches from the innermost lexical environment outward
+
+// 38. let version
+
+let b = 10;
+
+function test() {
+    console.log(b);
+
+    let b = 20;
+}
+
+test();
+
+// Logs: ReferenceError: Cannot access 'b' before initialization
+// why? Because the local b exists in the TDZ and shadows the outer b
+
+// 39. A very common interview trap
+
+var c = 10;
+
+function test() {
+    console.log(c);
+
+    var c = 20;
+}
+
+test();
+
+// Logs: undefined
+// why? Because the local c is hoisted and initialized with undefined, shadowing the outer c
