@@ -167,3 +167,238 @@ for (let i = 0; i < 3; i++) {
 
 // why? let is block-scoped, so each callback has its own copy of i
 // let creates a new binding for each iteration.
+
+// 15. Event Loop — basic
+
+console.log("A");
+
+setTimeout(() => {
+    console.log("B");
+}, 0);
+
+console.log("C");
+
+// Logs: A, C, B
+
+// why? Synchronous code executes first.
+// Call Stack
+//  ↓
+//  A
+//  C
+
+// Task Queue
+//   ↓
+//   B
+
+// 16. Promise vs setTimeout
+
+console.log("A");
+
+setTimeout(() => {
+    console.log("B");
+}, 0);
+
+Promise.resolve().then(() => {
+    console.log("C");
+});
+
+console.log("D");
+
+// Logs: A, D, C, B
+
+// Execution order
+// 1. Synchronous code
+// 2. Microtasks
+// 3. Macrotasks
+
+// 17. Multiple Promises and timeout
+
+console.log("1");
+
+Promise.resolve().then(() => {
+    console.log("2");
+});
+
+Promise.resolve().then(() => {
+    console.log("3");
+});
+
+setTimeout(() => {
+    console.log("4");
+}, 0);
+
+console.log("5");
+
+// Logs: 1, 5, 2, 3, 4
+
+// Microtasks execute in FIFO order before the timer task.
+
+// 18. Nested Promise + setTimeout
+
+console.log("A");
+
+setTimeout(() => {
+    console.log("B");
+
+    Promise.resolve().then(() => {
+        console.log("C");
+    })
+});
+
+Promise.resolve().then(() => {
+    console.log("D");
+
+    setTimeout(() => {
+        console.log("E");
+    }, 0);
+});
+
+console.log("F");
+
+// Logs: A, F, D, B, C, E
+
+// 19. async/await
+
+console.log("A");
+
+async function test() {
+    console.log("B");
+
+    await Promise.resolve();
+
+    console.log("C");
+}
+
+test();
+
+console.log("D");
+
+// Logs: A, B, D, C
+
+// why? async function starts synchronously. So: A B When execution reaches: await Promise.resolve();
+// the rest of the function is scheduled as a microtask Then: D Finally: C
+
+// 20. async/await + setTimeout
+
+console.log("1");
+
+async function test() {
+    console.log("2");
+
+    await Promise.resolve();
+
+    console.log("3");
+
+    setTimeout(() => {
+        console.log("4");
+    }, 0);
+}
+
+test();
+
+setTimeout(() => {
+    console.log("5");
+}, 0);
+
+console.log("6");
+
+// Logs: 1, 2, 6, 3, 5, 4
+
+// why? Synchronous: 1, 2, 6 Microtask: 3 Macrotask: 5, 4
+
+// 21. Event loop tricky question
+
+console.log("start");
+
+setTimeout(() => {
+    console.log("timeout");
+}, 0);
+
+Promise.resolve().then(() => {
+    console.log("promise");
+
+    setTimeout(() => {
+        console.log("inner timeout");
+    }, 0);
+});
+
+console.log("end");
+
+// Logs: start, end, promise, timeout, inner timeout
+
+// 22. Closure + asynchronous code
+
+function test() {
+    let value = 10;
+
+    setTimeout(() => {
+        console.log(value);
+    }, 1000);
+
+    value = 20;
+}
+
+test();
+
+// Logs: 20
+// Why? The callback closes over the variable, not a snapshot of its original value.
+
+// 23. const object mutation
+
+const user = {
+    name: "John"
+};
+
+user.name = "Alex";
+
+console.log(user.name);
+
+// Logs: Alex
+
+// Why? const prevents reassignment of the variable binding, not mutation of the object.
+// But: const user = {}; user = {}; gives: TypeError
+
+// 24. Type coercion
+
+console.log(1 + "2"); // Logs: "12" because the number 1 is coerced to a string and concatenated with "2"
+console.log("5" - 2); // Logs: 3 because the string "5" is coerced to a number and subtracted by 2
+console.log("5" + 2); // Logs: "52" because the number 2 is coerced to a string and concatenated with "5"
+
+// Why? + can mean string concatenation & - forces numeric conversion.
+
+// 25. == vs ===
+
+console.log(5 == "5"); // Logs: true because == performs type coercion and compares the values after converting "5" to a number
+console.log(5 === "5"); // Logs: false because === checks for both value and type, and the types are different (number vs string)
+
+// Why? == performs type coercion, === checks both type and value.
+
+// 26. Tricky null
+
+console.log(null == undefined); // Logs: true because == considers null and undefined equal in value but not in type
+console.log(null === undefined); // Logs: false because === checks for both value and type, and null and undefined are different types
+// type of null is object and type of undefined is undefined
+
+// 27. Boolean coercion
+
+console.log(Boolean(0)); // Logs: false because 0 is falsy
+console.log(Boolean("0")); // Logs: true because non-empty strings are truthy
+console.log(Boolean("")); // Logs: false because empty strings are falsy
+console.log(Boolean([])); // Logs: true because non-empty arrays are truthy
+console.log(Boolean({})); // Logs: true because non-empty objects are truthy
+
+// Remember: 
+// 0       → false
+// ""      → false
+// null    → false
+// undefined → false
+// NaN     → false
+
+// 28. typeof
+
+console.log(typeof null); // Logs: object because of a historical bug in JavaScript
+console.log(typeof undefined); // Logs: undefined
+console.log(typeof []); // Logs: object because arrays are objects in JavaScript
+console.log(typeof {}); // Logs: object because {} is an object
+console.log(typeof function() {}); // Logs: function because functions are a special type of object in JavaScript
+console.log(typeof null === "object"); // Logs: true because of the historical bug in JavaScript
